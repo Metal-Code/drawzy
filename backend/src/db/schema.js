@@ -10,7 +10,6 @@ const createTables = () => {
             total_points INTEGER DEFAULT 0,
             games_played INTEGER DEFAULT 0,
             games_won INTEGER DEFAULT 0,
-            correct_guesses INTEGER DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
 
@@ -32,22 +31,13 @@ const createTables = () => {
             FOREIGN KEY (user_id) REFERENCES users(id)
         );
 
-        CREATE TABLE IF NOT EXISTS match_history (
+        CREATE TABLE IF NOT EXISTS group_match_history (
             id TEXT PRIMARY KEY,
-            group_id TEXT,
-            is_ranked INTEGER DEFAULT 0,
+            group_id TEXT NOT NULL,
+            winner_id TEXT NOT NULL,
             played_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (group_id) REFERENCES groups(id)
-        );
-
-        CREATE TABLE IF NOT EXISTS match_scores (
-            match_id TEXT NOT NULL,
-            user_id TEXT NOT NULL,
-            score INTEGER DEFAULT 0,
-            correct_guesses INTEGER DEFAULT 0,
-            PRIMARY KEY (match_id, user_id),
-            FOREIGN KEY (match_id) REFERENCES match_history(id),
-            FOREIGN KEY (user_id) REFERENCES users(id)
+            FOREIGN KEY (group_id) REFERENCES groups(id),
+            FOREIGN KEY (winner_id) REFERENCES users(id)
         );
     `)
 }
