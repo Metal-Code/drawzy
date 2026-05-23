@@ -59,8 +59,15 @@ const getUserGroups = (userId) => {
     return stmt.all(userId)
 }
 
+const addMatchHistory = (id, groupId, winnerId) => {
+    const stmt = db.prepare(`
+        INSERT INTO group_match_history (id, group_id, winner_id)
+        VALUES (?, ?, ?)
+    `)
+    return stmt.run(id, groupId, winnerId)
+}
 
-const addMatchHistory = (groupId) => {
+const getGroupMatchHistory = (groupId) => {
     const stmt = db.prepare(`
         SELECT group_match_history.id, group_match_history.played_at,
         users.username as winner_username, users.avatar as winner_avatar
@@ -68,7 +75,7 @@ const addMatchHistory = (groupId) => {
         JOIN users ON group_match_history.winner_id = users.id
         WHERE group_match_history.group_id = ?
         ORDER BY group_match_history.played_at DESC
-        `)
+    `)
     return stmt.all(groupId)
 }
 
@@ -80,5 +87,6 @@ export {
     getGroupMembers,
     isGroupMember,
     getUserGroups,
-    addMatchHistory
+    addMatchHistory,
+    getGroupMatchHistory
 }

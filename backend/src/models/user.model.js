@@ -2,7 +2,7 @@ import { db } from '../db/index.js'
 
 const createUser = (id, username, hashedPassword, avatar) => {
     const stmt = db.prepare(`
-        INSERT INTO users (id, username, hashedPassword, avatar)
+        INSERT INTO users (id, username, password, avatar)
         values (?, ?, ?, ?)
         `)
 

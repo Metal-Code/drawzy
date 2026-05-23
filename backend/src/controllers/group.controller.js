@@ -4,7 +4,7 @@ import { ApiError } from '../utils/ApiError.js'
 import { ApiResponse } from '../utils/ApiResponse.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 
-const create = asyncHandler( async(req, res, next) => {
+export const create = asyncHandler( async(req, res, next) => {
     const {name} = req.body
     if(!name)
         throw new ApiError(400, "Group name is required")

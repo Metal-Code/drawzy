@@ -4,12 +4,15 @@ import cors from 'cors';
 import authRoutes from './routes/auth.routes.js'
 import groupRoutes from './routes/group.routes.js'
 import leaderboardRoutes from './routes/leaderboard.routes.js'
+import { errorMiddleware } from './middlewares/error.middleware.js'
+import { allowedOrigins } from './config/constants.js'
+
 
 const app = express();
 
 app.use(cors({
-    origin : process.env.CORS_ORIGIN,
-    credentials : true
+    origin: (origin, cb) => cb(null, !origin || allowedOrigins.includes(origin)),
+    credentials: true
 }))
 
 
@@ -27,5 +30,6 @@ app.use(cookieParser())
 app.use('/api/auth', authRoutes)
 app.use('/api/groups', groupRoutes)
 app.use('/api/leaderboard', leaderboardRoutes)
+app.use(errorMiddleware)
 
 export {app}
