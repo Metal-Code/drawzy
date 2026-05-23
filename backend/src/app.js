@@ -2,6 +2,8 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import authRoutes from './routes/auth.routes.js'
+import groupRoutes from './routes/group.routes.js'
+import leaderboardRoutes from './routes/leaderboard.routes.js'
 
 const app = express();
 
@@ -23,5 +25,7 @@ app.use(express.urlencoded({
 
 app.use(cookieParser())
 app.use('/api/auth', authRoutes)
+app.use('/api/groups', groupRoutes)
+app.use('/api/leaderboard', leaderboardRoutes)
 
 export {app}

@@ -72,3 +72,5 @@ export const logout = asyncHandler(async(req, res, next) => {
         .clearCookie('token')
         .json(new ApiResponse(200, null, 'logout successfull'))
 })
+
+
