@@ -63,9 +63,9 @@ export default function Game() {
   useEffect(() => {
     if (!socket || !user) return
 
-    socket.on('picking-phase', ({ drawerId, drawerName }) => {
-      updateGameState({ status: 'picking', currentDrawerId: drawerId, hint: null, word: null })
-      setStrokes([])  // clear here
+    socket.on('picking-phase', ({ drawerId, drawerName, currentRound, totalRounds }) => {
+      updateGameState({ status: 'picking', currentDrawerId: drawerId, hint: null, word: null, currentRound })
+      setStrokes([])
       setHasGuessed(false)
       setShowWordPicker(false)
       addMessage({ type: 'system', text: `${drawerName} is choosing a word...` })
@@ -174,7 +174,7 @@ export default function Game() {
   }
 
   const players = room?.players || []
-  const currentRound = room?.gameState?.currentRound || 1
+  const currentRound = gameState.currentRound || room?.gameState?.currentRound || 1
   const totalRounds = room?.settings?.rounds || 3
 
   return (

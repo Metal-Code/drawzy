@@ -62,6 +62,18 @@ export const joinRoom = (socket, { roomId, userId, username, avatar, isGuest }) 
         return
     }
 
+    if (room.settings.isGroupRoom && room.settings.groupId) {
+        socket.join(`group:${room.settings.groupId}`)
+    }
+
+    const existingPlayer = room.players.find(p => p.id === userId)
+    if (existingPlayer) {
+        existingPlayer.socketId = socket.id
+        socket.join(roomId)
+        socket.emit('room-joined', { roomId, room })
+        return
+    }
+
     const player = {
         id: userId,
         username,
@@ -74,11 +86,12 @@ export const joinRoom = (socket, { roomId, userId, username, avatar, isGuest }) 
         hasGuessedCorrect: false
     }
 
-    room.players.push(player)
-socket.join(roomId)
 
-socket.emit('room-joined', { roomId, room })
-socket.to(roomId).emit('player-joined', { player, room, message: `${username} joined the game` })
+    room.players.push(player)
+    socket.join(roomId)
+
+    socket.emit('room-joined', { roomId, room })
+    socket.to(roomId).emit('player-joined', { player, room, message: `${username} joined the game` })
 }
 
 export const playerReady = (socket, { roomId, userId }) => {

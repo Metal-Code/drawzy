@@ -52,16 +52,13 @@ export default function Lobby() {
   })
 
   // Only join if not already in the room
-  const alreadyInRoom = room?.players?.some(p => p.id === user.id)
-  if (!alreadyInRoom) {
-    socket.emit('join-room', {
-      roomId,
-      userId: user.id,
-      username: user.username,
-      avatar: user.avatar,
-      isGuest: user.isGuest
-    })
-  }
+  socket.emit('join-room', {
+    roomId,
+    userId: user.id,
+    username: user.username,
+    avatar: user.avatar,
+    isGuest: user.isGuest
+})
 
   return () => {
     socket.off('room-created')

@@ -107,7 +107,7 @@ export default function Groups() {
             {groups.map((group, i) => {
               const colors = ['border-coral', 'border-sky', 'border-mint', 'border-purple', 'border-yellow']
               return (
-                <button key={group.id} onClick={() => navigate(`/groups/${group.id}`)}
+                <button key={group.id} onClick={() => navigate(`/groups/${group.id}`, { state: { group } })}
                   className={`card border-2 ${colors[i % colors.length]} text-left hover:brightness-110 transition-all active:scale-95`}>
                   <div className="flex items-start justify-between mb-3">
                     <h3 className="font-display text-2xl text-cream font-bold">{group.name}</h3>

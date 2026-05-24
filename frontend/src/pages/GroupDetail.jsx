@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useSocket } from '../context/SocketContext'
 import { useRoom } from '../context/RoomContext'
@@ -14,15 +14,30 @@ export default function GroupDetail() {
   const { getSocket } = useSocket()
   const { updateRoom } = useRoom()
   const { addToast } = useToast()
+  const location = useLocation()
   const [members, setMembers] = useState([])
   const [history, setHistory] = useState([])
-  const [group, setGroup] = useState(null)
+  const [group, setGroup] = useState(location.state?.group || null)
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
+  
 
   useEffect(() => {
     fetchData()
   }, [groupId])
+
+  useEffect(() => {
+  
+    const socket = getSocket()
+    socket.emit('join-group-channel', { groupId })
+    
+    socket.on('group-game-invite', ({ roomId }) => {
+        navigate(`/room/${roomId}`)
+    })
+
+    return () => socket.off('group-game-invite')
+  }, [groupId])
+
 
   const fetchData = async () => {
     try {
@@ -42,14 +57,16 @@ export default function GroupDetail() {
   const handleStartGame = () => {
     const socket = getSocket()
     socket.emit('create-room', {
-      user: { userId: user.id, username: user.username, avatar: user.avatar, isGuest: false },
-      settings: { rounds: 3, drawTime: 60, difficulty: 'easy', isCompetitive: false, isGroupRoom: true, groupId }
+        user: { userId: user.id, username: user.username, avatar: user.avatar, isGuest: false },
+        settings: { rounds: 3, drawTime: 60, difficulty: 'easy', isCompetitive: false, isGroupRoom: true, groupId }
     })
     socket.once('room-created', ({ roomId, room }) => {
-      updateRoom(room)
-      navigate(`/room/${roomId}`)
+        updateRoom(room)
+        // Notify all group members
+        socket.emit('group-game-started', { groupId, roomId })
+        navigate(`/room/${roomId}`)
     })
-  }
+}
 
   const handleCopyCode = async () => {
     if (!group) return
@@ -67,6 +84,27 @@ export default function GroupDetail() {
         <h2 className="font-display text-2xl text-cream">{loading ? '...' : members[0] ? 'Group' : ''}</h2>
         <button onClick={handleStartGame} className="btn-primary py-2 px-6">🎮 Start Game</button>
       </nav>
+
+      {group && (
+        <div className="px-8 pt-4 max-w-4xl mx-auto w-full">
+          <div className="card bg-yellow border-none flex items-center justify-between">
+            <div>
+              <p className="font-body text-navy/60 text-sm font-semibold uppercase tracking-widest mb-1">Group Name</p>
+              <h2 className="font-display text-3xl font-bold text-navy">{group.name}</h2>
+            </div>
+            <div className="text-right">
+              <p className="font-body text-navy/60 text-sm font-semibold uppercase tracking-widest mb-1">Invite Code</p>
+              <div className="flex items-center gap-3">
+                <span className="font-display text-3xl font-bold text-navy tracking-widest">{group.invite_code}</span>
+                <button onClick={handleCopyCode}
+                  className="bg-navy text-yellow font-display font-semibold px-4 py-2 rounded-xl transition-all active:scale-95">
+                  {copied ? '✓ Copied!' : '📋 Copy'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex-1 flex items-center justify-center text-white/40 font-body">Loading...</div>

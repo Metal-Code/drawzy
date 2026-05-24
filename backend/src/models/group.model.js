@@ -33,7 +33,7 @@ const addGroupMember = (groupId, userId) => {
 
 const getGroupMembers = (groupId) => {
     const stmt = db.prepare(`
-        SELECET users.id, users.username, users.avatar, users.total_points
+        SELECT users.id, users.username, users.avatar, users.total_points
         FROM group_members
         JOIN users ON group_members.user_id = users.id
         WHERE group_members.group_id = ?

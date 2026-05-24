@@ -23,7 +23,11 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     const res = await api.post('/auth/login', { username, password })
-    setUser({ ...res.data, isGuest: false })
+    const userData = res.data
+    if (!userData.avatar || userData.avatar === 'default') {
+        userData.avatar = '🎨'
+    }
+    setUser({ ...userData, isGuest: false })
     localStorage.removeItem('drawzy_guest')
   }
 

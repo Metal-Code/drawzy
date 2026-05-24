@@ -25,18 +25,18 @@ export const join = asyncHandler(async(req, res, next) => {
     if(!group)
         throw new ApiError(404, "The invite code is invalid")
     const alreadyMember = isGroupMember(group.id, req.user.id)
-    if(already)
+    if(alreadyMember)
         throw new ApiError(409, "Already a part of this group")
 
     addGroupMember(group.id, req.user.id)
 
-    return res.status(200).json(new ApiResponse(200, {id : group.id, name : group.name}, "Group joined Successfully"))
+    return res.status(200).json(new ApiResponse(200, {id: group.id, name: group.name}, "Group joined Successfully"))
 })
 
 
 export const getMembers = asyncHandler(async(req, res) => {
     const {groupId} = req.params
-    const member = isGroupMember(group.id, req.user.id)
+    const member = isGroupMember(groupId, req.user.id)
     if(!member)
         throw new ApiError(403, "You are not a member of this group")
 

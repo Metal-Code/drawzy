@@ -38,6 +38,13 @@ export const initSocket = (io) => {
         socket.on('tab-switch', (data) => handleTabSwitch(socket, io, data))
 
         socket.on('disconnect', () => handleDisconnect(socket, io))
+        socket.on('group-game-started', ({ groupId, roomId }) => {
+            socket.to(`group:${groupId}`).emit('group-game-invite', { roomId })
+        })
+
+        socket.on('join-group-channel', ({ groupId }) => {
+            socket.join(`group:${groupId}`)
+        })
 
         socket.on('error', (error) => {
             console.error(`Socket error: ${error.message}`)

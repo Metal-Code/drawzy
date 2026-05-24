@@ -54,11 +54,19 @@ export const startTurn = (io, roomId) => {
     const turnIndex = (room.gameState.currentRound - 1) * room.players.length + room.gameState.currentDrawerIndex
     const wordChoices = room.gameState.wordSets[turnIndex]
 
+    if (!wordChoices || wordChoices.length === 0) {
+        console.error('No word choices for turn', turnIndex)
+        endTurn(io, roomId)
+        return
+    }
+
     room.gameState.wordChoices = wordChoices
 
     io.to(roomId).emit('picking-phase', {
         drawerId: drawer.id,
-        drawerName: drawer.username
+        drawerName: drawer.username,
+        currentRound: room.gameState.currentRound,
+        totalRounds: room.settings.rounds
     })
 
     io.to(drawer.socketId).emit('choose-word', { wordChoices })

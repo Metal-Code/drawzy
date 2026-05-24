@@ -9,19 +9,37 @@ const fallbackWords = {
     easy: [
         'cat', 'dog', 'house', 'tree', 'car', 'sun', 'fish', 'bird',
         'apple', 'ball', 'book', 'chair', 'clock', 'cloud', 'cup',
-        'door', 'egg', 'flag', 'flower', 'hat'
+        'door', 'egg', 'flag', 'flower', 'hat',
+        // 30 New Easy Words (Simple shapes, easy to recognize)
+        'boat', 'moon', 'star', 'cake', 'milk', 'shoe', 'key', 'frog',
+        'duck', 'banana', 'pencil', 'pizza', 'ring', 'bone', 'leaf',
+        'sock', 'shirt', 'table', 'window', 'spoon', 'knife', 'fork',
+        'glasses', 'heart', 'smile', 'spider', 'snake', 'snow', 'fire', 'bed'
     ],
     medium: [
         'elephant', 'guitar', 'volcano', 'sandwich', 'bicycle', 'tornado',
         'telescope', 'umbrella', 'rocket', 'penguin', 'waterfall', 'castle',
         'submarine', 'cactus', 'rainbow', 'helicopter', 'igloo', 'compass',
-        'lantern', 'anchor'
+        'lantern', 'anchor',
+        // 30 New Medium Words (More detail, specific objects or simple scenes)
+        'astronaut', 'dinosaur', 'pirate', 'mermaid', 'skeleton', 'treasure',
+        'hamburger', 'pineapple', 'popcorn', 'spaghetti', 'backpack', 'keyboard',
+        'headset', 'microscope', 'windmill', 'lighthouse', 'scarecrow', 'snowman',
+        'caterpillar', 'butterfly', 'jellyfish', 'octopus', 'kangaroo', 'giraffe',
+        'suitcase', 'toothbrush', 'hot air balloon', 'roller coaster', 'campfire', 'statue'
     ],
     hard: [
         'jealousy', 'democracy', 'gravity', 'evolution', 'karma',
         'procrastination', 'déjà vu', 'inflation', 'nightmare', 'echo',
         'silence', 'freedom', 'ambition', 'nostalgia', 'paradox',
-        'revolution', 'chaos', 'illusion', 'destiny', 'temptation'
+        'revolution', 'chaos', 'illusion', 'destiny', 'temptation',
+        // 30 New Hard Words (Abstract concepts, metaphors, or complex scenarios)
+        'time travel', 'parallel universe', 'extinction', 'global warming', 'hypnotize',
+        'superhero', 'black hole', 'teleport', 'nightmare', 'déjà vu', // keeping your originals
+        'blueprint', 'symphony', 'mirage', 'geometry', 'allergy',
+        'internet', 'artificial intelligence', 'quicksand', 'eclipse', 'gossip',
+        'greed', 'victory', 'betrayal', 'confetti', 'dilemma',
+        'deforestation', 'cryptid', 'glitch', 'gravity', 'wisdom', 'curse'
     ]
 }
 
