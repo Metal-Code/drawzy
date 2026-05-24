@@ -74,3 +74,6 @@ export const logout = asyncHandler(async(req, res, next) => {
 })
 
 
+export const me = asyncHandler(async (req, res) => {
+  return res.status(200).json(new ApiResponse(200, req.user, 'User fetched'))
+})

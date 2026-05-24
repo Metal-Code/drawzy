@@ -18,11 +18,11 @@ export const startGame = async (io, socket, { roomId, userId }) => {
         return
     }
 
-    const allReady = room.players.every(p => p.isReady || p.id === userId)
-    if (!allReady) {
-        socket.emit('error', { message: 'Not all players are ready' })
-        return
-    }
+    // const allReady = room.players.every(p => p.isReady || p.id === userId)
+    // if (!allReady) {
+    //     socket.emit('error', { message: 'Not all players are ready' })
+    //     return
+    // }
 
     const wordSets = await generateWordsForGame(
         room.settings.rounds,

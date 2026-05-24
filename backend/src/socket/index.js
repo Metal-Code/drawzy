@@ -16,12 +16,12 @@ export const initSocket = (io) => {
         console.log(`Socket connected: ${socket.id}`)
 
         socket.on('create-room', (data) => {
-    if (!data || !data.user) {
-        socket.emit('error', { message: 'User data is required' })
-        return
-    }
-    createRoom(socket, data.user, data.settings)
-})
+            if (!data || !data.user) {
+                socket.emit('error', { message: 'User data is required' })
+                return
+            }
+            createRoom(socket, data.user, data.settings)
+        })
         socket.on('join-room', (data) => joinRoom(socket, data))
         socket.on('player-ready', (data) => playerReady(socket, data))
         socket.on('leave-room', (data) => leaveRoom(socket, data))

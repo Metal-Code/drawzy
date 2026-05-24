@@ -7,7 +7,10 @@ export const handleGuess = (socket, io, { roomId, userId, username, guess }) => 
     if (room.gameState.status !== 'drawing') return
 
     const drawer = room.players[room.gameState.currentDrawerIndex]
-    if (drawer?.id === userId) return
+    if (drawer?.id === userId) {
+        io.to(roomId).emit('wrong-guess', { userId, username, guess })
+        return
+    }
 
     const currentWord = room.gameState.currentWord?.toLowerCase().trim()
     const playerGuess = guess?.toLowerCase().trim()
@@ -18,7 +21,11 @@ export const handleGuess = (socket, io, { roomId, userId, username, guess }) => 
         const score = Math.max(100, Math.round(500 * (1 - timeElapsed / timeLimit)))
 
         const player = room.players.find(p => p.id === userId)
-        if (player) player.score += score
+        if (player)
+        {
+            player.score += score
+            player.hasGuessedCorrect = true
+        }
 
         io.to(roomId).emit('correct-guess', {
             userId,
@@ -35,7 +42,7 @@ export const handleGuess = (socket, io, { roomId, userId, username, guess }) => 
             import('./game.js').then(({ nextTurn }) => nextTurn(io, roomId))
         }
     } else {
-        socket.to(roomId).emit('wrong-guess', { userId, username, guess })
+        io.to(roomId).emit('wrong-guess', { userId, username, guess })
     }
 }
 

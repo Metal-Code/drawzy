@@ -75,13 +75,10 @@ export const joinRoom = (socket, { roomId, userId, username, avatar, isGuest }) 
     }
 
     room.players.push(player)
-    socket.join(roomId)
+socket.join(roomId)
 
-    socket.emit('room-joined', { roomId, room })
-    socket.to(roomId).emit('player-joined', {
-        player,
-        message: `${username} joined the game`
-    })
+socket.emit('room-joined', { roomId, room })
+socket.to(roomId).emit('player-joined', { player, room, message: `${username} joined the game` })
 }
 
 export const playerReady = (socket, { roomId, userId }) => {
