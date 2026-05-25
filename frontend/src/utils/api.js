@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8000/api'
+const BASE_URL = 'https://drawzy-j102.onrender.com/api'
 
 const request = async (method, path, body = null) => {
   const options = {

@@ -4,7 +4,7 @@ let socket = null
 
 export const getSocket = () => {
   if (!socket) {
-    socket = io('http://localhost:8000', {
+    socket = io('https://drawzy-j102.onrender.com', {
       withCredentials: true,
       autoConnect: false,
     })
