@@ -64,7 +64,17 @@ export default function Game() {
     if (!socket || !user) return
 
     socket.on('picking-phase', ({ drawerId, drawerName, currentRound, totalRounds }) => {
-      updateGameState({ status: 'picking', currentDrawerId: drawerId, hint: null, word: null, currentRound })
+      if (currentRound === 1) {
+          updateGameState({ 
+              status: 'picking', 
+              currentDrawerId: drawerId, 
+              hint: null, 
+              word: null,
+              messages: [] // clear on first turn
+          })
+      } else {
+          updateGameState({ status: 'picking', currentDrawerId: drawerId, hint: null, word: null })
+      }
       setStrokes([])
       setHasGuessed(false)
       setShowWordPicker(false)
