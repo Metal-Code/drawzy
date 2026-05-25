@@ -146,6 +146,9 @@ export const endGame = async (io, roomId) => {
     const room = rooms[roomId]
     if (!room) return
 
+    console.log('endGame called for room:', roomId)
+    console.log('players:', room.players.map(p => ({ id: p.id, username: p.username, isGuest: p.isGuest, score: p.score })))
+
     const sortedPlayers = [...room.players].sort((a, b) => b.score - a.score)
     const winner = sortedPlayers[0]
 
@@ -156,9 +159,15 @@ export const endGame = async (io, roomId) => {
 
     try {
         for (const player of room.players) {
-            if (player.isGuest) continue
+            if (player.isGuest)
+            {
+                console.log('skipping guest:', player.username)
+                continue
+            }     
+            console.log('updating stats for:', player.username, 'score:', player.score)
             const won = player.id === winner.id
             await updateUserStats(player.id, player.score, won)
+            console.log('stats updated for:', player.username)
         }
 
         if (room.settings.isGroupRoom && room.settings.groupId) {

@@ -94,8 +94,12 @@ const shuffleArray = (array) => {
 }
 
 const getFallbackWords = (totalSets, difficulty) => {
-    const words = shuffleArray([...fallbackWords[difficulty]])
-    return chunkIntoThree(words.slice(0, totalSets * 3))
+    const source = [...fallbackWords[difficulty]]
+    const needed = totalSets * 3
+    while (source.length < needed) {
+        source.push(...fallbackWords[difficulty])
+    }
+    return chunkIntoThree(shuffleArray(source).slice(0, needed))
 }
 
 const fetchWordsForDifficulty = async (difficulty, count) => {
