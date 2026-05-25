@@ -11,7 +11,7 @@ import { allowedOrigins } from './config/constants.js'
 const app = express();
 
 app.use(cors({
-    origin: '*',
+    origin: (origin, cb) => cb(null, !origin || allowedOrigins.includes(origin)),
     credentials: true
 }))
 
