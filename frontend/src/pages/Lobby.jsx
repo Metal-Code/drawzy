@@ -90,7 +90,7 @@ export default function Lobby() {
   const handleStartGame = () => {
     setStarting(true)
     socket.emit('start-game', { roomId, userId: user.id, settings })
-  }
+}
 
   const handleLeave = () => {
     socket.emit('leave-room', { roomId, userId: user.id })

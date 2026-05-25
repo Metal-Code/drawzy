@@ -4,7 +4,7 @@ import { updateUserStats } from '../models/user.model.js'
 import { addMatchHistory } from '../models/group.model.js'
 import { v4 as uuidv4 } from 'uuid'
 
-export const startGame = async (io, socket, { roomId, userId }) => {
+export const startGame = async (io, socket, { roomId, userId, settings }) => {
     const room = rooms[roomId]
     if (!room) return
 
@@ -18,11 +18,12 @@ export const startGame = async (io, socket, { roomId, userId }) => {
         return
     }
 
-    // const allReady = room.players.every(p => p.isReady || p.id === userId)
-    // if (!allReady) {
-    //     socket.emit('error', { message: 'Not all players are ready' })
-    //     return
-    // }
+    if (settings) {
+        room.settings.rounds = settings.rounds || room.settings.rounds
+        room.settings.drawTime = settings.drawTime || room.settings.drawTime
+        room.settings.difficulty = settings.difficulty || room.settings.difficulty
+        room.settings.isCompetitive = settings.isCompetitive ?? room.settings.isCompetitive
+    }
 
     const wordSets = await generateWordsForGame(
         room.settings.rounds,
