@@ -53,15 +53,14 @@ export const login = asyncHandler( async(req, res, next) => {
     )
 
     return res
-        .status(201)
-        .cookie('token', token, {
-            httpOnly : true,
-            secure: process.env.NODE_ENV === 'production',
-            maxAge: 7 * 24 * 60 * 60 * 1000
-        })
-        .json(new ApiResponse(200, {
-            id : user.id, username : user.username, avatar : user.avatar
-        }))
+    .status(200)
+    .cookie('token', token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+    })
+    .json(new ApiResponse(200, { id: user.id, username: user.username, avatar: user.avatar }, 'Login successful'))
 
 })
 
