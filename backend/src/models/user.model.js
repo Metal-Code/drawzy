@@ -23,13 +23,12 @@ const findUserById = (id) => {
 const updateUserStats = (id, points, won) => {
     const stmt = db.prepare(`
         UPDATE users SET   
-            total_point = total_points + ?
-            games_played = games_played + ?
+            total_points = total_points + ?,
+            games_played = games_played + 1,
             games_won = games_won + ?
-        where id = ?
-        `)  
-        
-    return stmt.run(id, points, won ? 1 : 0)
+        WHERE id = ?
+    `)
+    return stmt.run(points, won ? 1 : 0, id)
 }
 
 const getTopUsers = (limit = 50) => {
