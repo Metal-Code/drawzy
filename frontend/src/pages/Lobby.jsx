@@ -51,6 +51,10 @@ export default function Lobby() {
     setStarting(false)
   })
 
+  socket.on('back-to-lobby', ({ room: updatedRoom }) => {
+    updateRoom(updatedRoom)
+  })
+
   // Only join if not already in the room
   socket.emit('join-room', {
     roomId,
