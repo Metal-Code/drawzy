@@ -5,9 +5,11 @@ import { useSocket } from '../context/SocketContext'
 import { useRoom } from '../context/RoomContext'
 import { useToast } from '../context/ToastContext'
 import { copyToClipboard } from '../utils/helpers'
+import Logo from '../components/Logo'
 
 const DIFFICULTIES = ['easy', 'medium', 'hard']
 const DRAW_TIMES = [30, 60, 90, 120]
+const TONES = ['bg-cyan', 'bg-lime', 'bg-yolk', 'bg-pink']
 
 export default function Lobby() {
   const { roomId } = useParams()
@@ -24,64 +26,49 @@ export default function Lobby() {
   const isHost = room?.host === user?.id
 
   useEffect(() => {
-  if (!user) return
-  const socket = getSocket()
+    if (!user) return
+    const socket = getSocket()
+    socket.on('room-created', ({ room }) => updateRoom(room))
+    socket.on('room-joined', ({ room }) => updateRoom(room))
+    socket.on('player-joined', ({ room: updatedRoom, message }) => {
+      if (updatedRoom) updateRoom(updatedRoom)
+      addToast(message, 'info')
+    })
+    socket.on('player-left', ({ room: updatedRoom, message }) => {
+      if (updatedRoom) updateRoom(updatedRoom)
+      addToast(message, 'warning')
+    })
+    socket.on('host-changed', ({ newHost, room: updatedRoom }) => {
+      if (updatedRoom) updateRoom(updatedRoom)
+      if (newHost.id === user.id) addToast('you are now the host!', 'success')
+    })
+    socket.on('game-started', ({ room: updatedRoom }) => {
+      updateRoom(updatedRoom)
+      navigate(`/room/${roomId}/game`)
+    })
+    socket.on('error', ({ message }) => { addToast(message, 'error'); setStarting(false) })
 
-  socket.on('room-created', ({ room }) => updateRoom(room))
-  socket.on('room-joined', ({ room }) => updateRoom(room))
-  socket.on('player-joined', ({ room: updatedRoom, player, message }) => {
-    if (updatedRoom) updateRoom(updatedRoom)
-    addToast(message, 'info')
-  })
-  socket.on('player-left', ({ room: updatedRoom, message }) => {
-    if (updatedRoom) updateRoom(updatedRoom)
-    addToast(message, 'warning')
-  })
-
-  socket.on('host-changed', ({ newHost, room: updatedRoom }) => {
-    if (updatedRoom) updateRoom(updatedRoom)
-    if (newHost.id === user.id) addToast('You are now the host!', 'success')
-  })
-  socket.on('game-started', ({ room: updatedRoom }) => {
-    updateRoom(updatedRoom)
-    navigate(`/room/${roomId}/game`)
-  })
-  socket.on('error', ({ message }) => {
-    addToast(message, 'error')
-    setStarting(false)
-  })
-
-  socket.on('back-to-lobby', ({ room: updatedRoom }) => {
-    updateRoom(updatedRoom)
+    socket.on('back-to-lobby', ({ room: updatedRoom }) => {
+      updateRoom(updatedRoom)
   })
 
-  // Only join if not already in the room
-  socket.emit('join-room', {
-    roomId,
-    userId: user.id,
-    username: user.username,
-    avatar: user.avatar,
-    isGuest: user.isGuest
-})
+    socket.emit('join-room', {
+      roomId, userId: user.id, username: user.username, avatar: user.avatar, isGuest: user.isGuest
+    })
 
-  return () => {
-    socket.off('room-created')
-    socket.off('room-joined')
-    socket.off('player-joined')
-    socket.off('player-left')
-    socket.off('host-changed')
-    socket.off('game-started')
-    socket.off('error')
-  }
-}, [user, roomId])
+    
 
-  console.log('room:', room)
-  console.log('user:', user)
-  console.log('isHost:', room?.host === user?.id)
+    return () => {
+      ['room-created','room-joined','player-joined','player-left','host-changed','game-started', 'back-to-lobby','error']
+        .forEach(e => socket.off(e))
+    }
+  }, [user, roomId])
 
   if (!room) return (
-    <div className="min-h-screen doodle-bg flex items-center justify-center">
-      <p className="font-display text-2xl text-yellow animate-pulse">Joining room...</p>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="blok bg-yolk px-8 py-6 animate-wiggle">
+        <p className="display text-3xl">joining room...</p>
+      </div>
     </div>
   )
 
@@ -94,7 +81,7 @@ export default function Lobby() {
   const handleStartGame = () => {
     setStarting(true)
     socket.emit('start-game', { roomId, userId: user.id, settings })
-}
+  }
 
   const handleLeave = () => {
     socket.emit('leave-room', { roomId, userId: user.id })
@@ -104,135 +91,121 @@ export default function Lobby() {
   const players = room?.players || []
 
   return (
-    <div className="min-h-screen doodle-bg flex flex-col items-center justify-center px-4 py-8">
-      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Left — Players */}
-        <div className="flex flex-col gap-4">
-          {/* Room code */}
-          <div className="card bg-yellow border-none">
-            <p className="font-body text-navy/60 text-sm font-semibold uppercase tracking-widest mb-1">Room Code</p>
-            <div className="flex items-center justify-between">
-              <span className="font-display text-5xl font-bold text-navy">{roomId}</span>
-              <button onClick={handleCopy}
-                className="bg-navy text-yellow font-display font-semibold px-4 py-2 rounded-xl transition-all active:scale-95">
-                {copied ? '✓ Copied!' : '📋 Copy'}
+    <div className="min-h-screen flex flex-col">
+      <nav className="flex items-center justify-between px-6 py-4">
+        <Logo />
+        <button className="btn btn-sm btn-cream" onClick={handleLeave}>leave</button>
+      </nav>
+
+      <div className="flex-1 w-full max-w-6xl mx-auto px-4 pb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Left */}
+        <div className="flex flex-col gap-5">
+          <div className="blok bg-pink p-5">
+            <p className="font-body font-bold text-cream/80 text-xs uppercase tracking-widest mb-1">room code</p>
+            <div className="flex items-center justify-between gap-3">
+              <span className="display text-6xl text-cream tracking-widest">{roomId}</span>
+              <button onClick={handleCopy} className="btn btn-sm btn-ink">
+                {copied ? '✓ copied' : 'copy'}
               </button>
             </div>
           </div>
 
-          {/* Players list */}
-          <div className="card flex-1">
-            <h3 className="font-display text-2xl text-cream mb-4">
-              Squad <span className="text-yellow">({players.length})</span>
-            </h3>
-            <div className="flex flex-col gap-2">
-              {players.map((p, i) => {
-                const colors = ['bg-coral', 'bg-sky', 'bg-mint', 'bg-purple', 'bg-pink', 'bg-yellow']
-                return (
-                  <div key={p.id} className={`${colors[i % colors.length]} rounded-2xl px-4 py-3 flex items-center justify-between`}>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">{p.avatar}</span>
-                      <span className="font-display font-semibold text-navy text-lg">{p.username}</span>
-                      {p.id === room?.host && (
-                        <span className="bg-navy/20 text-navy text-xs font-bold px-2 py-0.5 rounded-full">host</span>
-                      )}
-                      {p.isGuest && (
-                        <span className="bg-navy/20 text-navy text-xs font-bold px-2 py-0.5 rounded-full">guest</span>
-                      )}
-                    </div>
-                    <span className="font-display text-navy font-bold">
-                      {p.score > 0 ? p.score : ''}
-                    </span>
+          <div className="blok bg-cream p-5 flex-1">
+            <h3 className="display text-3xl mb-4">squad <span className="text-pink">({players.length})</span></h3>
+            <div className="grid grid-cols-2 gap-3">
+              {players.map((p, i) => (
+                <div key={p.id} className={`blok-sm ${TONES[i % TONES.length]} px-3 py-3`}>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{p.avatar}</span>
+                    <span className="display text-xl truncate">{p.username}</span>
                   </div>
-                )
-              })}
+                  <div className="flex gap-1 mt-2 flex-wrap">
+                    {p.id === room?.host && <span className="chip bg-ink text-cream text-[10px] py-0.5 px-2">host</span>}
+                    {p.isGuest && <span className="chip bg-cream text-[10px] py-0.5 px-2">guest</span>}
+                    {p.id === user?.id && <span className="chip bg-yolk text-[10px] py-0.5 px-2">you</span>}
+                  </div>
+                </div>
+              ))}
               {players.length === 1 && (
-                <p className="text-center text-white/40 text-sm py-4">Waiting for more players...</p>
+                <div className="blok-sm bg-cream border-dashed col-span-2 px-3 py-6 text-center">
+                  <p className="font-body font-bold text-ink/60 uppercase text-sm tracking-wider">waiting for more players...</p>
+                </div>
               )}
             </div>
           </div>
-
-          <button onClick={handleLeave} className="btn-secondary w-full">Leave Room</button>
         </div>
 
-        {/* Right — Settings (host only) */}
-        <div className="flex flex-col gap-4">
-          <div className="card flex-1">
-            <h3 className="font-display text-2xl text-cream mb-6">Settings</h3>
+        {/* Right */}
+        <div className="flex flex-col gap-5">
+          <div className="blok bg-cream p-5">
+            <h3 className="display text-3xl mb-5">settings</h3>
 
-            {/* Rounds */}
-            <div className="mb-6">
-              <label className="font-body text-white/60 text-sm uppercase tracking-widest mb-3 block">Rounds</label>
-              <div className="flex items-center gap-4">
-                <button disabled={!isHost} onClick={() => setSettings(s => ({ ...s, rounds: Math.max(2, s.rounds - 1) }))}
-                  className="bg-navy-light rounded-xl w-10 h-10 font-display text-xl font-bold text-cream disabled:opacity-40 hover:bg-white/10 transition-colors">−</button>
-                <span className="font-display text-4xl font-bold text-yellow w-12 text-center">{settings.rounds}</span>
-                <button disabled={!isHost} onClick={() => setSettings(s => ({ ...s, rounds: Math.min(10, s.rounds + 1) }))}
-                  className="bg-navy-light rounded-xl w-10 h-10 font-display text-xl font-bold text-cream disabled:opacity-40 hover:bg-white/10 transition-colors">+</button>
-                <span className="font-body text-white/40 text-sm">min 2 · max 10</span>
+            {/* Rounds — chevron stepper */}
+            <Setting label="rounds">
+              <div className="flex items-center gap-3">
+                <button disabled={!isHost || settings.rounds <= 1}
+                  onClick={() => setSettings(s => ({ ...s, rounds: Math.max(1, s.rounds - 1) }))}
+                  className="btn btn-sm btn-cyan w-10">−</button>
+                <span className="display text-4xl w-12 text-center">{settings.rounds}</span>
+                <button disabled={!isHost || settings.rounds >= 10}
+                  onClick={() => setSettings(s => ({ ...s, rounds: Math.min(10, s.rounds + 1) }))}
+                  className="btn btn-sm btn-cyan w-10">+</button>
               </div>
-            </div>
+            </Setting>
 
-            {/* Draw time */}
-            <div className="mb-6">
-              <label className="font-body text-white/60 text-sm uppercase tracking-widest mb-3 block">
-                Draw Time <span className="text-coral font-bold">{settings.drawTime}s</span>
-              </label>
+            <Setting label="draw time">
               <div className="flex gap-2 flex-wrap">
                 {DRAW_TIMES.map(t => (
                   <button key={t} disabled={!isHost} onClick={() => setSettings(s => ({ ...s, drawTime: t }))}
-                    className={`font-display font-semibold px-4 py-2 rounded-xl transition-all ${settings.drawTime === t ? 'bg-sky text-navy' : 'bg-navy-light text-cream hover:bg-white/10'} disabled:opacity-40`}>
-                    {t}s
-                  </button>
+                    className={`btn btn-sm ${settings.drawTime === t ? 'btn-yolk' : 'btn-cream'}`}>{t}s</button>
                 ))}
               </div>
-            </div>
+            </Setting>
 
-            {/* Difficulty */}
-            <div className="mb-6">
-              <label className="font-body text-white/60 text-sm uppercase tracking-widest mb-3 block">
-                Difficulty <span className="text-coral font-bold capitalize">{settings.difficulty}</span>
-              </label>
+            <Setting label="difficulty">
               <div className="flex gap-2">
                 {DIFFICULTIES.map(d => (
                   <button key={d} disabled={!isHost} onClick={() => setSettings(s => ({ ...s, difficulty: d }))}
-                    className={`font-display font-semibold px-4 py-2 rounded-xl transition-all capitalize ${settings.difficulty === d ? 'bg-mint text-navy' : 'bg-navy-light text-cream hover:bg-white/10'} disabled:opacity-40`}>
-                    {d}
-                  </button>
+                    className={`btn btn-sm ${settings.difficulty === d ? 'btn-lime' : 'btn-cream'}`}>{d}</button>
                 ))}
               </div>
-            </div>
+            </Setting>
 
-            {/* Competitive mode */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between pt-2">
               <div>
-                <p className="font-display text-lg text-cream">Competitive Mode</p>
+                <p className="display text-2xl">competitive</p>
                 {settings.isCompetitive && (
-                  <p className="font-body text-xs text-coral mt-0.5">👀 Tab switching will be exposed</p>
+                  <p className="font-body font-bold text-pink text-xs uppercase tracking-wide mt-0.5">tab-switching exposed</p>
                 )}
               </div>
               <button disabled={!isHost} onClick={() => setSettings(s => ({ ...s, isCompetitive: !s.isCompetitive }))}
-                className={`relative w-14 h-7 rounded-full transition-colors disabled:opacity-40 ${settings.isCompetitive ? 'bg-coral' : 'bg-navy'}`}>
-                <div className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${settings.isCompetitive ? 'right-1' : 'left-1'}`} />
+                className={`relative w-16 h-9 border-[3px] border-ink transition-colors disabled:opacity-40 ${settings.isCompetitive ? 'bg-pink' : 'bg-cream'}`}>
+                <div className={`absolute top-0.5 w-6 h-6 bg-ink transition-all ${settings.isCompetitive ? 'right-1' : 'left-1'}`} />
               </button>
             </div>
           </div>
 
-          {isHost && (
-            <button
-              onClick={handleStartGame}
-              disabled={players.length < 2 || starting}
-              className={`w-full py-4 rounded-3xl font-display text-xl font-bold transition-all ${players.length >= 2 && !starting ? 'btn-primary animate-pulse' : 'bg-navy-light text-white/30 cursor-not-allowed'}`}>
-              {starting ? '⏳ Generating words...' : players.length < 2 ? '⏳ Waiting for players...' : '🚀 Start Game!'}
+          {isHost ? (
+            <button onClick={handleStartGame} disabled={players.length < 2 || starting}
+              className="btn btn-pink w-full py-6 text-3xl">
+              {starting ? 'cooking words...' : players.length < 2 ? 'need 2+ players' : 'start!'}
             </button>
-          )}
-          {!isHost && (
-            <div className="card text-center text-white/50 font-body">
-              Waiting for host to start the game...
+          ) : (
+            <div className="blok bg-cream p-5 text-center">
+              <p className="display text-xl">waiting for host to start...</p>
             </div>
           )}
         </div>
       </div>
+    </div>
+  )
+}
+
+function Setting({ label, children }) {
+  return (
+    <div className="mb-5">
+      <p className="font-body font-bold text-ink/60 text-xs uppercase tracking-widest mb-2">{label}</p>
+      {children}
     </div>
   )
 }

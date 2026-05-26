@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../utils/api'
+import Logo from '../components/Logo'
 
 export default function Leaderboard() {
   const navigate = useNavigate()
@@ -10,48 +11,48 @@ export default function Leaderboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.get('/leaderboard').then(res => {
-      setPlayers(res.data)
-      setLoading(false)
-    }).catch(() => setLoading(false))
+    api.get('/leaderboard').then(res => { setPlayers(res.data); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
-  const myRank = user && !user.isGuest ? players.findIndex(p => p.id === user.id) + 1 : null
-  const MEDALS = { 1: 'gold', 2: 'silver', 3: 'bronze' }
+  const TONES = ['bg-yolk', 'bg-cyan', 'bg-lime']
 
   return (
-    <div className="min-h-screen doodle-bg flex flex-col">
-      <nav className="flex items-center justify-between px-8 py-5 border-b border-white/10">
-        <button onClick={() => navigate(user ? '/home' : '/')} className="font-display text-4xl text-yellow font-bold">Drawzy!</button>
-        <h2 className="font-display text-3xl text-cream">Leaderboard</h2>
-        <div className="w-24" />
+    <div className="min-h-screen flex flex-col">
+      <nav className="flex items-center justify-between px-6 py-4">
+        <Logo to={user ? '/home' : '/'} />
+        <h2 className="display text-3xl">ranks</h2>
+        <button onClick={() => navigate(user ? '/home' : '/')} className="btn btn-sm btn-cream">back</button>
       </nav>
+
       {loading ? (
-        <div className="flex-1 flex items-center justify-center text-white/40 font-body">Loading...</div>
+        <div className="flex-1 flex items-center justify-center display text-2xl text-ink/50">loading...</div>
       ) : (
-        <div className="flex-1 px-4 pb-8 max-w-2xl mx-auto w-full pt-6">
+        <div className="flex-1 w-full max-w-2xl mx-auto px-4 pb-8">
           {user?.isGuest && (
-            <div className="card border-yellow/30 border-2 mb-4 text-center">
-              <p className="font-body text-yellow text-sm">Register to appear on the leaderboard!</p>
+            <div className="blok bg-yolk p-3 mb-4 text-center">
+              <p className="display text-lg">register to appear on the leaderboard!</p>
             </div>
           )}
-          <div className="card">
+          <div className="blok bg-cream p-4 flex flex-col gap-2">
             {players.map((p, i) => {
-              const isMe = p.id === user?.id
               const rank = i + 1
-              const medal = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : null
+              const isMe = p.id === user?.id
+              const tone = isMe ? 'bg-pink' : (rank <= 3 ? TONES[rank - 1] : 'bg-cream')
+              const cream = isMe
               return (
-                <div key={p.id} className={`flex items-center gap-4 px-4 py-3 rounded-2xl mb-1 ${isMe ? 'bg-yellow/10 border border-yellow/40' : ''}`}>
-                  <span className="font-display font-bold text-xl w-8 text-center text-white/40">{rank}</span>
+                <div key={p.id} className={`blok-sm ${tone} px-3 py-3 flex items-center gap-3`}>
+                  <span className={`display text-3xl w-10 text-center ${cream ? 'text-cream' : ''}`}>{rank}</span>
                   <span className="text-2xl">{p.avatar}</span>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-body font-semibold text-cream">{p.username}</span>
-                      {isMe && <span className="text-xs bg-yellow/20 text-yellow px-2 py-0.5 rounded-full font-semibold">You</span>}
+                      <span className={`display text-xl ${cream ? 'text-cream' : ''}`}>{p.username}</span>
+                      {isMe && <span className="chip bg-cream text-[10px] py-0 px-1.5">you</span>}
                     </div>
-                    <span className="font-body text-white/30 text-xs">{p.games_played} games · {p.games_won} wins</span>
+                    <span className={`font-body font-bold uppercase tracking-wider text-[10px] ${cream ? 'text-cream/80' : 'text-ink/60'}`}>
+                      {p.games_played} games · {p.games_won} wins
+                    </span>
                   </div>
-                  <span className="font-display font-bold text-yellow text-xl">{p.total_points}</span>
+                  <span className={`display text-2xl ${cream ? 'text-cream' : 'text-pink'}`}>{p.total_points}</span>
                 </div>
               )
             })}

@@ -10,15 +10,15 @@ import Leaderboard from './pages/Leaderboard'
 import PostGame from './pages/PostGame'
 
 const LoadingScreen = () => (
-  <div className="min-h-screen flex items-center justify-center doodle-bg">
+  <div className="min-h-screen flex items-center justify-center">
     <div className="text-center">
-      <div className="text-6xl animate-bounce">🎨</div>
-      <p className="font-display text-2xl text-yellow mt-4">Loading Drawzy...</p>
+      <div className="blok px-8 py-6 inline-block bg-yolk animate-wiggle">
+        <p className="display text-4xl">loading scribble<span className="text-pink">!</span></p>
+      </div>
     </div>
   </div>
 )
 
-// Only registered users — blocks guests
 const RegisteredRoute = ({ children }) => {
   const { user, loading } = useAuth()
   if (loading) return <LoadingScreen />
@@ -26,7 +26,6 @@ const RegisteredRoute = ({ children }) => {
   return children
 }
 
-// Any logged in user including guests
 const AuthRoute = ({ children }) => {
   const { user, loading } = useAuth()
   if (loading) return <LoadingScreen />

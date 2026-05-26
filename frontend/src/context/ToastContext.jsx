@@ -12,35 +12,29 @@ export const ToastProvider = ({ children }) => {
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), duration)
   }, [])
 
-  const removeToast = useCallback((id) => {
-    setToasts(prev => prev.filter(t => t.id !== id))
-  }, [])
+  const removeToast = useCallback((id) => { setToasts(prev => prev.filter(t => t.id !== id)) }, [])
 
   return (
     <ToastContext.Provider value={{ addToast }}>
       {children}
       <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
-        {toasts.map(toast => (
-          <Toast key={toast.id} toast={toast} onRemove={removeToast} />
-        ))}
+        {toasts.map(toast => <Toast key={toast.id} toast={toast} onRemove={removeToast} />)}
       </div>
     </ToastContext.Provider>
   )
 }
 
 const Toast = ({ toast, onRemove }) => {
-  const colors = {
-    info: 'bg-sky text-navy',
-    success: 'bg-mint text-navy',
-    error: 'bg-coral text-white',
-    warning: 'bg-yellow text-navy',
-    tab: 'bg-red-600 text-white',
+  const tones = {
+    info: 'bg-cyan',
+    success: 'bg-lime',
+    error: 'bg-pink text-cream',
+    warning: 'bg-yolk',
+    tab: 'bg-pink text-cream',
   }
   return (
-    <div
-      className={`${colors[toast.type] || colors.info} px-4 py-3 rounded-2xl font-body font-semibold text-sm shadow-xl animate-slide-down flex items-center gap-2 cursor-pointer max-w-xs`}
-      onClick={() => onRemove(toast.id)}
-    >
+    <div className={`blok-sm ${tones[toast.type] || tones.info} px-4 py-3 font-body font-bold text-sm max-w-xs cursor-pointer animate-pop-in`}
+      onClick={() => onRemove(toast.id)}>
       {toast.message}
     </div>
   )

@@ -9,14 +9,14 @@ import Chat from '../components/Chat'
 import Scoreboard from '../components/Scoreboard'
 import Timer from '../components/Timer'
 import WordPicker from '../components/WordPicker'
-import { playSound, generateWordHint } from '../utils/helpers'
+import { playSound } from '../utils/helpers'
 
 export default function Game() {
   const { roomId } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
   const { getSocket } = useSocket()
-  const { room, updateRoom, gameState, updateGameState, addMessage, resetRoom } = useRoom()
+  const { room, updateRoom, gameState, updateGameState, addMessage } = useRoom()
   const { addToast } = useToast()
 
   const socket = getSocket()
@@ -31,10 +31,8 @@ export default function Game() {
   const isDrawer = gameState.currentDrawerId === user?.id
   const isCompetitive = room?.settings?.isCompetitive
 
-  // Competitive mode — fullscreen + tab detection
   useEffect(() => {
     if (!isCompetitive) return
-
     const handleVisibility = () => {
       if (document.hidden) {
         setTimeout(() => {
@@ -46,13 +44,10 @@ export default function Game() {
     const handleFullscreen = () => {
       if (!document.fullscreenElement) socket.emit('tab-switch', { roomId, userId: user.id, username: user.username })
     }
-
     document.addEventListener('visibilitychange', handleVisibility)
     window.addEventListener('blur', handleBlur)
     document.addEventListener('fullscreenchange', handleFullscreen)
-
     document.documentElement.requestFullscreen?.().catch(() => {})
-
     return () => {
       document.removeEventListener('visibilitychange', handleVisibility)
       window.removeEventListener('blur', handleBlur)
@@ -63,54 +58,34 @@ export default function Game() {
   useEffect(() => {
     if (!socket || !user) return
 
-    socket.on('picking-phase', ({ drawerId, drawerName, currentRound, totalRounds }) => {
+    socket.on('picking-phase', ({ drawerId, drawerName, currentRound }) => {
       if (currentRound === 1) {
-          updateGameState({ 
-              status: 'picking', 
-              currentDrawerId: drawerId, 
-              hint: null, 
-              word: null,
-              messages: [] // clear on first turn
-          })
+        updateGameState({ status: 'picking', currentDrawerId: drawerId, hint: null, word: null, messages: [] })
       } else {
-          updateGameState({ status: 'picking', currentDrawerId: drawerId, hint: null, word: null })
+        updateGameState({ status: 'picking', currentDrawerId: drawerId, hint: null, word: null })
       }
       setStrokes([])
       setHasGuessed(false)
       setShowWordPicker(false)
       addMessage({ type: 'system', text: `${drawerName} is choosing a word...` })
-  })
-
-    socket.on('choose-word', ({ wordChoices }) => {
-      setWordChoices(wordChoices)
-      setShowWordPicker(true)
     })
 
-    socket.on('drawing-phase', ({ hint, wordLength, drawTime }) => {
+    socket.on('choose-word', ({ wordChoices }) => { setWordChoices(wordChoices); setShowWordPicker(true) })
+
+    socket.on('drawing-phase', ({ hint, drawTime }) => {
       setShowWordPicker(false)
       updateGameState({ status: 'drawing', hint, drawTime })
       setStrokes([])
       playSound('roundStart')
     })
 
-    socket.on('your-word', ({ word }) => {
-      updateGameState({ word, hint: null })
-    })
+    socket.on('your-word', ({ word }) => updateGameState({ word, hint: null }))
+    socket.on('draw', (stroke) => setStrokes(prev => [...prev, stroke]))
+    socket.on('wrong-guess', ({ username, guess }) => addMessage({ type: 'wrong', username, text: guess }))
 
-    socket.on('draw', (stroke) => {
-      setStrokes(prev => [...prev, stroke])
-    })
-
-    socket.on('wrong-guess', ({ username, guess }) => {
-      addMessage({ type: 'wrong', username, text: guess })
-    })
-
-    socket.on('correct-guess', ({ userId, username, score, message }) => {
+    socket.on('correct-guess', ({ userId, username, score }) => {
       addMessage({ type: 'correct', username, text: `guessed the word! (+${score})` })
-      if (userId === user.id) {
-        setHasGuessed(true)
-        playSound('correct')
-      }
+      if (userId === user.id) { setHasGuessed(true); playSound('correct') }
       updateRoom(prev => ({
         ...prev,
         players: prev.players.map(p => p.id === userId ? { ...p, score: p.score + score, hasGuessedCorrect: true } : p)
@@ -127,43 +102,21 @@ export default function Game() {
       if (tabAlertTimer.current) clearTimeout(tabAlertTimer.current)
       setTabAlert({ username, count })
       tabAlertTimer.current = setTimeout(() => setTabAlert(null), 4000)
-      updateGameState(prev => ({
-        tabSwitches: { ...prev.tabSwitches, [username]: count }
-      }))
+      updateGameState(prev => ({ tabSwitches: { ...prev.tabSwitches, [username]: count } }))
     })
 
-    socket.on('player-joined', ({ player, message }) => {
-      addMessage({ type: 'system', text: message })
-      addToast(message, 'info')
-    })
-
-    socket.on('player-left', ({ message }) => {
-      addMessage({ type: 'system', text: message })
-      addToast(message, 'warning')
-    })
-
-    socket.on('player-disconnected', ({ message }) => {
-      addMessage({ type: 'system', text: message })
-      addToast(message, 'warning')
-    })
-
-    socket.on('player-reconnected', ({ message }) => {
-      addMessage({ type: 'system', text: message })
-      addToast(message, 'success')
-    })
-
-    socket.on('host-changed', ({ newHost }) => {
-      if (newHost.id === user.id) addToast('You are now the host!', 'success')
-    })
+    socket.on('player-joined', ({ message }) => { addMessage({ type: 'system', text: message }); addToast(message, 'info') })
+    socket.on('player-left', ({ message }) => { addMessage({ type: 'system', text: message }); addToast(message, 'warning') })
+    socket.on('player-disconnected', ({ message }) => { addMessage({ type: 'system', text: message }); addToast(message, 'warning') })
+    socket.on('player-reconnected', ({ message }) => { addMessage({ type: 'system', text: message }); addToast(message, 'success') })
+    socket.on('host-changed', ({ newHost }) => { if (newHost.id === user.id) addToast('you are now the host!', 'success') })
 
     socket.on('game-over', ({ winner, finalScores }) => {
       navigate(`/room/${roomId}/postgame`, { state: { winner, finalScores, isCompetitive, tabSwitches: gameState.tabSwitches } })
     })
 
     socket.on('reconnected', ({ room: r, strokes: s }) => {
-      updateRoom(r)
-      setStrokes(s || [])
-      addToast('Reconnected!', 'success')
+      updateRoom(r); setStrokes(s || []); addToast('reconnected!', 'success')
     })
 
     return () => {
@@ -174,52 +127,73 @@ export default function Game() {
     }
   }, [socket, user, roomId])
 
-  const handleGuess = (guess) => {
-    socket.emit('guess', { roomId, userId: user.id, username: user.username, guess })
-  }
-
-  const handleWordPick = (word) => {
-    socket.emit('word-chosen', { roomId, word })
-    setShowWordPicker(false)
-  }
+  const handleGuess = (guess) => socket.emit('guess', { roomId, userId: user.id, username: user.username, guess })
+  const handleWordPick = (word) => { socket.emit('word-chosen', { roomId, word }); setShowWordPicker(false) }
+  const handleEnd = () => { socket.emit('leave-room', { roomId, userId: user.id }); navigate('/') }
 
   const players = room?.players || []
   const currentRound = gameState.currentRound || room?.gameState?.currentRound || 1
   const totalRounds = room?.settings?.rounds || 3
 
   return (
-    <div className={`min-h-screen doodle-bg flex flex-col ${isCompetitive ? 'ring-4 ring-red-500 ring-inset' : ''}`}>
-      {/* Competitive badge */}
-      {isCompetitive && (
-        <div className="fixed top-2 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 bg-red-600 text-white font-display font-bold px-4 py-1.5 rounded-full text-sm animate-pulse">
-          <span className="w-2 h-2 rounded-full bg-white inline-block" />
-          COMPETITIVE
-        </div>
-      )}
+    <div className="h-screen w-screen overflow-hidden flex flex-col bg-cream"
+      style={{ boxShadow: isCompetitive ? 'inset 0 0 0 6px var(--pink)' : 'none' }}>
 
-      {/* Tab switch alert */}
+      {/* Top bar */}
+      <div className="flex items-center justify-between px-4 py-2 border-b-[3px] border-ink bg-cream">
+        <div className="display text-2xl">scribble<span className="text-pink">!</span></div>
+        <div className="flex items-center gap-3">
+          <span className="chip bg-cream">round {currentRound}/{totalRounds}</span>
+          {isCompetitive && (
+            <span className="chip bg-pink text-cream gap-2">
+              <span className="w-2 h-2 bg-cream inline-block animate-blink" />
+              competitive
+            </span>
+          )}
+          {gameState.status === 'picking' && <span className="chip bg-cyan">choosing word...</span>}
+        </div>
+        <button onClick={handleEnd} className="btn btn-sm btn-cream">end</button>
+      </div>
+
+      {/* Word + timer bar */}
+      <div className="flex items-center justify-between gap-4 px-4 py-2 border-b-[3px] border-ink bg-cream min-h-[64px]">
+        <div className="flex-1">
+          {gameState.status === 'drawing' && (
+            <Timer duration={room?.settings?.drawTime || 60} active={gameState.status === 'drawing'} />
+          )}
+        </div>
+        <div className="display text-4xl text-pink" style={{ letterSpacing: '0.15em' }}>
+          {gameState.status === 'drawing'
+            ? (isDrawer ? gameState.word : gameState.hint)
+            : (gameState.status === 'picking' ? '...' : '')}
+        </div>
+        <div className="flex-1 text-right font-body font-bold text-ink/70 text-sm uppercase tracking-wider">
+          {user?.username} {user?.avatar}
+        </div>
+      </div>
+
+      {/* Tab alert */}
       {tabAlert && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-red-600 text-white text-center font-display text-xl font-bold py-4 animate-slide-down shadow-2xl">
+        <div className="absolute top-0 left-0 right-0 z-50 bg-pink text-cream text-center display text-2xl py-3 animate-pop-in">
           👀 {tabAlert.username} just left the tab! (×{tabAlert.count})
         </div>
       )}
 
       {/* Word picker */}
-      {showWordPicker && isDrawer && (
-        <WordPicker words={wordChoices} onPick={handleWordPick} />
-      )}
+      {showWordPicker && isDrawer && <WordPicker words={wordChoices} onPick={handleWordPick} />}
 
-      {/* Turn end overlay */}
+      {/* Turn end */}
       {turnEndOverlay && (
-        <div className="fixed inset-0 bg-navy/80 flex items-center justify-center z-40 backdrop-blur-sm">
-          <div className="card animate-bounce-in text-center max-w-sm w-full mx-4">
-            <p className="font-body text-white/50 mb-2">The word was</p>
-            <h2 className="font-display text-5xl font-bold text-yellow mb-6">{turnEndOverlay.word}</h2>
-            <div className="flex flex-col gap-2">
-              {turnEndOverlay.scores.slice(0, 3).map((p, i) => (
-                <div key={p.id} className="flex justify-between font-body text-cream">
+        <div className="fixed inset-0 z-40 flex items-center justify-center"
+          style={{ background: 'color-mix(in oklab, var(--ink) 70%, transparent)' }}>
+          <div className="blok bg-cream p-8 max-w-sm w-full mx-4 animate-pop-in text-center">
+            <p className="font-body font-bold text-ink/60 uppercase tracking-widest text-xs mb-1">the word was</p>
+            <h2 className="display text-5xl text-pink mb-5">{turnEndOverlay.word}</h2>
+            <div className="flex flex-col gap-1">
+              {turnEndOverlay.scores.slice(0, 3).map(p => (
+                <div key={p.id} className="flex justify-between font-body font-bold">
                   <span>{p.username}</span>
-                  <span className="font-bold text-yellow">{p.score}</span>
+                  <span className="display text-xl">{p.score}</span>
                 </div>
               ))}
             </div>
@@ -227,68 +201,11 @@ export default function Game() {
         </div>
       )}
 
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-white/10">
-        <span className="font-display text-2xl text-yellow font-bold">Drawzy!</span>
-        <div className="flex items-center gap-4">
-          <span className="font-body text-white/50 text-sm">Round <span className="text-cream font-bold">{currentRound}/{totalRounds}</span></span>
-          {gameState.status === 'picking' && (
-            <span className="pill bg-sky/20 text-sky">✏️ Choosing word...</span>
-          )}
-          {gameState.status === 'drawing' && (
-            <div className="w-48">
-              <Timer duration={room?.settings?.drawTime || 60} active={gameState.status === 'drawing'} />
-            </div>
-          )}
-        </div>
-        <div className="font-body text-white/50 text-sm">
-          {user?.username} {user?.avatar}
-        </div>
-      </div>
-
-      {/* Hint bar */}
-      {gameState.status === 'drawing' && (
-        <div className="text-center py-3 border-b border-white/10">
-          {isDrawer ? (
-            <span className="font-display text-3xl font-bold text-yellow tracking-widest">{gameState.word}</span>
-          ) : (
-            <span className="font-display text-3xl font-bold text-cream tracking-widest">
-              {gameState.hint}
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Main game area */}
-      <div className="flex-1 flex gap-4 p-4 min-h-0">
-        {/* Left — Scoreboard */}
-        <div className="w-48 flex-shrink-0">
-          <Scoreboard
-            players={players}
-            currentDrawerId={gameState.currentDrawerId}
-            tabSwitches={gameState.tabSwitches}
-          />
-        </div>
-
-        {/* Center — Canvas */}
-        <div className="flex-1 flex flex-col gap-3 min-w-0">
-          <Canvas
-            isDrawer={isDrawer}
-            socket={socket}
-            roomId={roomId}
-            strokes={strokes}
-          />
-        </div>
-
-        {/* Right — Chat */}
-        <div className="w-56 flex-shrink-0 flex flex-col">
-          <Chat
-            messages={gameState.messages}
-            onGuess={handleGuess}
-            isDrawer={isDrawer}
-            disabled={hasGuessed}
-          />
-        </div>
+      {/* Main grid */}
+      <div className="flex-1 min-h-0 grid p-3 gap-3" style={{ gridTemplateColumns: '200px 1fr 240px' }}>
+        <Scoreboard players={players} currentDrawerId={gameState.currentDrawerId} tabSwitches={gameState.tabSwitches} currentUserId={user?.id} />
+        <Canvas isDrawer={isDrawer} socket={socket} roomId={roomId} strokes={strokes} />
+        <Chat messages={gameState.messages} onGuess={handleGuess} isDrawer={isDrawer} disabled={hasGuessed} />
       </div>
     </div>
   )

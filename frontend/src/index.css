@@ -2,50 +2,119 @@
 @tailwind components;
 @tailwind utilities;
 
+
+@font-face {
+  font-family: 'Balonku';
+  src: url('/fonts/Balonku.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --ink: oklch(0.18 0.02 320);
+  --cream: oklch(0.96 0.04 90);
+  --pink: oklch(0.70 0.25 5);
+  --cyan: oklch(0.82 0.14 220);
+  --lime: oklch(0.90 0.20 130);
+  --yolk: oklch(0.88 0.18 85);
+}
+
 @layer base {
   * { box-sizing: border-box; }
+  html, body, #root { height: 100%; }
   body {
-    font-family: 'Nunito', sans-serif;
-    background-color: #1A1B2E;
-    color: #F5F0E8;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-weight: 500;
+    background-color: var(--cream);
+    color: var(--ink);
     margin: 0;
     padding: 0;
+    background-image:
+      repeating-linear-gradient(0deg, color-mix(in oklab, var(--ink) 4%, transparent) 0 1px, transparent 1px 32px),
+      repeating-linear-gradient(90deg, color-mix(in oklab, var(--ink) 4%, transparent) 0 1px, transparent 1px 32px);
   }
-  h1, h2, h3, h4, h5 {
-    font-family: 'Fredoka', sans-serif;
+  .display, h1, h2, h3, h4, h5 {
+    font-family: 'Balonku', system-ui, sans-serif;
+    font-weight: 400;
+    line-height: 0.9;
+    letter-spacing: 0.02em;
+    text-transform: lowercase;
   }
 }
 
 @layer components {
-  .btn-primary {
-    @apply font-display font-semibold px-6 py-3 rounded-2xl bg-yellow text-navy text-lg transition-all duration-150 active:scale-95 hover:brightness-110 shadow-lg;
+  .blok {
+    border: 3px solid var(--ink);
+    box-shadow: 6px 6px 0 var(--ink);
+    background: var(--cream);
+    transition: transform 80ms ease, box-shadow 80ms ease;
   }
-  .btn-secondary {
-    @apply font-display font-semibold px-6 py-3 rounded-2xl bg-navy-light text-cream text-lg border-2 border-white/10 transition-all duration-150 active:scale-95 hover:border-white/30;
+  .blok-sm {
+    border: 2px solid var(--ink);
+    box-shadow: 4px 4px 0 var(--ink);
+    background: var(--cream);
+    transition: transform 80ms ease, box-shadow 80ms ease;
   }
-  .btn-coral {
-    @apply font-display font-semibold px-6 py-3 rounded-2xl bg-coral text-white text-lg transition-all duration-150 active:scale-95 hover:brightness-110 shadow-lg;
+
+  .press { transition: transform 80ms ease, box-shadow 80ms ease; }
+  .press:hover { transform: translate(-1px, -1px); box-shadow: 7px 7px 0 var(--ink); }
+  .press:active { transform: translate(3px, 3px); box-shadow: 2px 2px 0 var(--ink); }
+
+  .press-sm { transition: transform 80ms ease, box-shadow 80ms ease; }
+  .press-sm:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--ink); }
+  .press-sm:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink); }
+
+  .btn {
+    @apply font-display inline-flex items-center justify-center px-5 py-3 select-none;
+    border: 3px solid var(--ink);
+    box-shadow: 6px 6px 0 var(--ink);
+    background: var(--cream);
+    color: var(--ink);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: transform 80ms ease, box-shadow 80ms ease, filter 80ms ease;
   }
-  .btn-mint {
-    @apply font-display font-semibold px-6 py-3 rounded-2xl bg-mint text-navy text-lg transition-all duration-150 active:scale-95 hover:brightness-110 shadow-lg;
+  .btn:hover { transform: translate(-1px, -1px); box-shadow: 7px 7px 0 var(--ink); }
+  .btn:active { transform: translate(3px, 3px); box-shadow: 2px 2px 0 var(--ink); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn:disabled:hover { transform: none; box-shadow: 6px 6px 0 var(--ink); }
+
+  .btn-sm { @apply px-3 py-2 text-base; box-shadow: 4px 4px 0 var(--ink); border-width: 2px; }
+  .btn-sm:hover { box-shadow: 5px 5px 0 var(--ink); }
+  .btn-sm:active { box-shadow: 2px 2px 0 var(--ink); }
+
+  .btn-pink { background: var(--pink); color: var(--cream); }
+  .btn-cyan { background: var(--cyan); color: var(--ink); }
+  .btn-lime { background: var(--lime); color: var(--ink); }
+  .btn-yolk { background: var(--yolk); color: var(--ink); }
+  .btn-cream { background: var(--cream); color: var(--ink); }
+  .btn-ink { background: var(--ink); color: var(--cream); }
+
+  .field {
+    @apply w-full px-4 py-3 font-body font-bold;
+    background: var(--cream);
+    color: var(--ink);
+    border: 3px solid var(--ink);
+    box-shadow: 4px 4px 0 var(--ink);
+    outline: none;
   }
-  .card {
-    @apply bg-navy-light rounded-3xl border-2 border-white/10 p-6;
-  }
-  .input {
-    @apply w-full bg-navy border-2 border-white/20 rounded-2xl px-4 py-3 text-cream font-body placeholder-white/30 focus:outline-none focus:border-yellow transition-colors;
-  }
-  .pill {
-    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold;
+  .field::placeholder { color: color-mix(in oklab, var(--ink) 45%, transparent); font-weight: 500; }
+  .field:focus { background: oklch(0.99 0.02 90); }
+
+  .chip {
+    @apply inline-flex items-center gap-1 px-3 py-1 font-display text-sm;
+    border: 2px solid var(--ink);
+    background: var(--cream);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
   }
 }
 
-::-webkit-scrollbar { width: 6px; }
+/* Scrollbar — chunky, ink */
+::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
-
-.doodle-bg {
-  background-image: radial-gradient(circle at 20% 50%, rgba(78, 205, 196, 0.08) 0%, transparent 50%),
-                    radial-gradient(circle at 80% 20%, rgba(255, 107, 107, 0.08) 0%, transparent 50%),
-                    radial-gradient(circle at 60% 80%, rgba(255, 217, 61, 0.06) 0%, transparent 50%);
-}
+::-webkit-scrollbar-thumb { background: var(--ink); border: 2px solid var(--cream); }

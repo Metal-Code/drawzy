@@ -6,6 +6,7 @@ import { useRoom } from '../context/RoomContext'
 import { useToast } from '../context/ToastContext'
 import { api } from '../utils/api'
 import { copyToClipboard } from '../utils/helpers'
+import Logo from '../components/Logo'
 
 export default function GroupDetail() {
   const { groupId } = useParams()
@@ -17,56 +18,38 @@ export default function GroupDetail() {
   const location = useLocation()
   const [members, setMembers] = useState([])
   const [history, setHistory] = useState([])
-  const [group, setGroup] = useState(location.state?.group || null)
+  const [group] = useState(location.state?.group || null)
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
-  
+
+  useEffect(() => { fetchData() }, [groupId])
 
   useEffect(() => {
-    fetchData()
-  }, [groupId])
-
-  useEffect(() => {
-  
     const socket = getSocket()
     socket.emit('join-group-channel', { groupId })
-    
-    socket.on('group-game-invite', ({ roomId }) => {
-        navigate(`/room/${roomId}`)
-    })
-
+    socket.on('group-game-invite', ({ roomId }) => navigate(`/room/${roomId}`))
     return () => socket.off('group-game-invite')
   }, [groupId])
 
-
   const fetchData = async () => {
     try {
-      const [membersRes, historyRes] = await Promise.all([
-        api.get(`/groups/${groupId}/members`),
-        api.get(`/groups/${groupId}/history`)
-      ])
-      setMembers(membersRes.data)
-      setHistory(historyRes.data)
-      setLoading(false)
-    } catch (e) {
-      addToast(e.message, 'error')
-      setLoading(false)
-    }
+      const [m, h] = await Promise.all([api.get(`/groups/${groupId}/members`), api.get(`/groups/${groupId}/history`)])
+      setMembers(m.data); setHistory(h.data); setLoading(false)
+    } catch (e) { addToast(e.message, 'error'); setLoading(false) }
   }
 
   const handleStartGame = () => {
     const socket = getSocket()
     socket.emit('create-room', {
-        user: { userId: user.id, username: user.username, avatar: user.avatar, isGuest: false },
-        settings: { rounds: 3, drawTime: 60, difficulty: 'easy', isCompetitive: false, isGroupRoom: true, groupId }
+      user: { userId: user.id, username: user.username, avatar: user.avatar, isGuest: false },
+      settings: { rounds: 3, drawTime: 60, difficulty: 'easy', isCompetitive: false, isGroupRoom: true, groupId }
     })
     socket.once('room-created', ({ roomId, room }) => {
-        updateRoom(room)
-        // Notify all group members
-        socket.emit('group-game-started', { groupId, roomId })
-        navigate(`/room/${roomId}`)
+      updateRoom(room)
+      socket.emit('group-game-started', { groupId, roomId })
+      navigate(`/room/${roomId}`)
     })
-}
+  }
 
   const handleCopyCode = async () => {
     if (!group) return
@@ -75,80 +58,75 @@ export default function GroupDetail() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const sortedMembers = [...members].sort((a, b) => b.total_points - a.total_points)
+  const sorted = [...members].sort((a, b) => b.total_points - a.total_points)
+  const TONES = ['bg-yolk', 'bg-cyan', 'bg-lime', 'bg-cream']
 
   return (
-    <div className="min-h-screen doodle-bg flex flex-col">
-      <nav className="flex items-center justify-between px-8 py-5 border-b border-white/10">
-        <button onClick={() => navigate('/groups')} className="font-display text-2xl text-yellow font-bold">← Groups</button>
-        <h2 className="font-display text-2xl text-cream">{loading ? '...' : members[0] ? 'Group' : ''}</h2>
-        <button onClick={handleStartGame} className="btn-primary py-2 px-6">🎮 Start Game</button>
+    <div className="min-h-screen flex flex-col">
+      <nav className="flex items-center justify-between px-6 py-4">
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate('/groups')} className="btn btn-sm btn-cream">← back</button>
+          <Logo to="/home" />
+        </div>
+        <button onClick={handleStartGame} className="btn btn-sm btn-pink">▶ start game</button>
       </nav>
 
-      {group && (
-        <div className="px-8 pt-4 max-w-4xl mx-auto w-full">
-          <div className="card bg-yellow border-none flex items-center justify-between">
+      <div className="flex-1 w-full max-w-5xl mx-auto px-4 pb-8">
+        {group && (
+          <div className="blok bg-pink p-5 flex flex-wrap items-center justify-between gap-4 mb-5">
             <div>
-              <p className="font-body text-navy/60 text-sm font-semibold uppercase tracking-widest mb-1">Group Name</p>
-              <h2 className="font-display text-3xl font-bold text-navy">{group.name}</h2>
+              <p className="font-body font-bold text-cream/80 text-xs uppercase tracking-widest">group</p>
+              <h2 className="display text-4xl text-cream">{group.name}</h2>
             </div>
             <div className="text-right">
-              <p className="font-body text-navy/60 text-sm font-semibold uppercase tracking-widest mb-1">Invite Code</p>
-              <div className="flex items-center gap-3">
-                <span className="font-display text-3xl font-bold text-navy tracking-widest">{group.invite_code}</span>
-                <button onClick={handleCopyCode}
-                  className="bg-navy text-yellow font-display font-semibold px-4 py-2 rounded-xl transition-all active:scale-95">
-                  {copied ? '✓ Copied!' : '📋 Copy'}
-                </button>
+              <p className="font-body font-bold text-cream/80 text-xs uppercase tracking-widest">invite code</p>
+              <div className="flex items-center gap-3 mt-1">
+                <span className="display text-3xl text-cream tracking-widest">{group.invite_code}</span>
+                <button onClick={handleCopyCode} className="btn btn-sm btn-ink">{copied ? '✓' : 'copy'}</button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {loading ? (
-        <div className="flex-1 flex items-center justify-center text-white/40 font-body">Loading...</div>
-      ) : (
-        <div className="flex-1 px-8 py-6 max-w-4xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Members / Leaderboard */}
-          <div className="card">
-            <h3 className="font-display text-2xl text-yellow mb-4">Members</h3>
-            <div className="flex flex-col gap-2">
-              {sortedMembers.map((m, i) => (
-                <div key={m.id} className={`flex items-center gap-3 px-3 py-2.5 rounded-2xl ${m.id === user.id ? 'bg-yellow/10 border border-yellow/30' : 'bg-navy'}`}>
-                  <span className="font-display font-bold text-white/30 w-5">{i + 1}</span>
-                  <span className="text-xl">{m.avatar}</span>
-                  <span className="flex-1 font-body font-semibold text-cream">{m.username}</span>
-                  <span className="font-display font-bold text-yellow">{m.total_points}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Match History */}
-          <div className="card">
-            <h3 className="font-display text-2xl text-sky mb-4">Match History</h3>
-            {history.length === 0 ? (
-              <p className="font-body text-white/40 text-center py-8">No games played yet!</p>
-            ) : (
+        {loading ? (
+          <div className="text-center py-12 display text-2xl text-ink/50">loading...</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="blok bg-cream p-5">
+              <h3 className="display text-3xl mb-4">members</h3>
               <div className="flex flex-col gap-2">
-                {history.map((match) => (
-                  <div key={match.id} className="flex items-center gap-3 bg-navy px-3 py-2.5 rounded-2xl">
-                    <span className="text-xl">{match.winner_avatar}</span>
-                    <div className="flex-1">
-                      <span className="font-body font-semibold text-cream">{match.winner_username}</span>
-                      <span className="font-body text-white/30 text-xs ml-2">won</span>
-                    </div>
-                    <span className="font-body text-white/30 text-xs">
-                      {new Date(match.played_at).toLocaleDateString()}
-                    </span>
+                {sorted.map((m, i) => (
+                  <div key={m.id} className={`blok-sm ${m.id === user.id ? 'bg-yolk' : TONES[i % TONES.length]} px-3 py-2 flex items-center gap-3`}>
+                    <span className="display text-xl w-6">{i + 1}</span>
+                    <span className="text-xl">{m.avatar}</span>
+                    <span className="flex-1 display text-lg truncate">{m.username}</span>
+                    <span className="display text-xl text-pink">{m.total_points}</span>
                   </div>
                 ))}
               </div>
-            )}
+            </div>
+            <div className="blok bg-cream p-5">
+              <h3 className="display text-3xl mb-4">history</h3>
+              {history.length === 0 ? (
+                <p className="font-body font-bold text-ink/50 uppercase tracking-wider text-sm text-center py-8">no games played yet</p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {history.map((match) => (
+                    <div key={match.id} className="blok-sm bg-cream px-3 py-2 flex items-center gap-3">
+                      <span className="text-xl">{match.winner_avatar}</span>
+                      <div className="flex-1">
+                        <span className="display text-lg">{match.winner_username}</span>
+                        <span className="font-body font-bold text-ink/50 text-xs ml-2 uppercase">won</span>
+                      </div>
+                      <span className="font-body font-bold text-ink/50 text-xs">{new Date(match.played_at).toLocaleDateString()}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
