@@ -12,7 +12,8 @@ export const io = new Server(httpServer, {
     cors: {
         origin: allowedOrigins,
         credentials: true
-    }
+    },
+    maxHttpBufferSize: 1e7,
 })
 
 initSocket(io)
