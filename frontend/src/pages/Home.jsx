@@ -43,7 +43,7 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
           <ActionCard tone="bg-pink" text="cream" icon="▶" title="play" desc="jump into a fresh room" onClick={handlePlay} />
           <ActionCard tone="bg-cyan" text="ink" icon="◆" title="groups" desc="play with your squad" onClick={() => navigate('/groups')} />
-          <ActionCard tone="bg-yolk" text="ink" icon="★" title="ranks" desc="see the top scribblers" onClick={() => navigate('/leaderboard')} />
+          <ActionCard tone="bg-yolk" text="ink" icon="★" title="ranks" desc="see the top drawzers" onClick={() => navigate('/leaderboard')} />
         </div>
 
         <div className="blok bg-cream flex gap-8 md:gap-12 px-8 py-5">

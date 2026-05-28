@@ -8,6 +8,12 @@ export const handleDraw = (socket, { roomId, stroke }) => {
     socket.to(roomId).emit('draw', stroke)
 }
 
+export const handleCanvasSync = (socket, { roomId, image }) => {
+    console.log('canvas-sync relay to room:', roomId, 'image size:', image?.length)
+    console.log('socket rooms:', [...socket.rooms])
+    socket.to(roomId).emit('canvas-sync', { image })
+}
+
 export const handleClearCanvas = (socket, io, { roomId, userId }) => {
     const room = rooms[roomId]
     if (!room) return
@@ -29,3 +35,4 @@ export const handleUndo = (socket, io, { roomId, userId }) => {
     room.gameState.strokes.pop()
     io.to(roomId).emit('undo', { strokes: room.gameState.strokes })
 }
+

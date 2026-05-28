@@ -141,7 +141,7 @@ export default function Game() {
 
       {/* Top bar */}
       <div className="flex items-center justify-between px-4 py-2 border-b-[3px] border-ink bg-cream">
-        <div className="display text-2xl">scribble<span className="text-pink">!</span></div>
+        <div className="display text-2xl">drawzy<span className="text-pink">!</span></div>
         <div className="flex items-center gap-3">
           <span className="chip bg-cream">round {currentRound}/{totalRounds}</span>
           {isCompetitive && (

@@ -7,7 +7,7 @@ import {
     handleDisconnect,
     reconnectToRoom
 } from './room.js'
-import { handleDraw, handleClearCanvas, handleUndo } from './draw.js'
+import { handleDraw, handleClearCanvas, handleUndo, handleCanvasSync } from './draw.js'
 import { handleGuess, handleTabSwitch } from './chat.js'
 import { startGame, wordChosen } from './game.js'
 
@@ -33,6 +33,7 @@ export const initSocket = (io) => {
         socket.on('draw', (data) => handleDraw(socket, data))
         socket.on('clear-canvas', (data) => handleClearCanvas(socket, io, data))
         socket.on('undo', (data) => handleUndo(socket, io, data))
+        socket.on('canvas-sync', (data) => handleCanvasSync(socket, data))
 
         socket.on('guess', (data) => handleGuess(socket, io, data))
         socket.on('tab-switch', (data) => handleTabSwitch(socket, io, data))

@@ -74,7 +74,7 @@ export default function Landing() {
       {/* Logo */}
       <div className="text-center mb-10 relative z-10">
         <h1 className="display text-7xl md:text-9xl">
-          scribble<span className="text-pink">!</span>
+          drawzy<span className="text-pink">!</span>
         </h1>
         <p className="font-body font-bold text-ink/70 text-lg mt-2 uppercase tracking-wider">draw badly. guess wildly. win loudly.</p>
       </div>
@@ -136,7 +136,7 @@ export default function Landing() {
       )}
 
       {mode === 'register' && (
-        <ModalCard tone="bg-yolk" title="join scribble!">
+        <ModalCard tone="bg-yolk" title="join drawzy!">
           <input className="field mb-3" placeholder="username" value={username}
             onChange={e => setUsername(e.target.value)} />
           <input className="field mb-4" type="password" placeholder="password" value={password}

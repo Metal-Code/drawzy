@@ -109,6 +109,7 @@ const fetchWordsForDifficulty = async (difficulty, count) => {
         model: 'openrouter/auto',
         messages: [{ role: 'user', content: prompt }]
     })
+    console.log('--- RAW API RESPONSE ---', JSON.stringify(response, null, 2))
 
     const content = response.choices[0].message.content.trim()
     const words = JSON.parse(content)
