@@ -13,7 +13,7 @@ const LoadingScreen = () => (
   <div className="min-h-screen flex items-center justify-center">
     <div className="text-center">
       <div className="blok px-8 py-6 inline-block bg-yolk animate-wiggle">
-        <p className="display text-4xl">loading scribble<span className="text-pink">!</span></p>
+        <p className="display text-4xl">loading drawzy<span className="text-pink">!</span></p>
       </div>
     </div>
   </div>
